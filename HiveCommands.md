@@ -19,7 +19,7 @@ To use the database
 ```
 USE HivePractice;
 ```
-Drop the database<br>
+### Drop database<br>
 In order to drop database, it should be empty.
 ```
 DROP DATABASE HivePractice;
