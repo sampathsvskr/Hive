@@ -47,13 +47,14 @@ SHOW TABLES:
 SHOW TABLES IN HivePractice;
 ```
 
+
 ```
 CREATE TABLE users 
 (
 id INT,
 name STRING,
 salary INT,
-unit STRING
+location STRING
 )
 ROW FORMAT DELIMITED
 COMMENT 'USER details'
@@ -69,14 +70,16 @@ DESCRIBE users;
 ```
 DESCRIBE FORMATTED users;
 ```
-
+```
+SHOW CRAETE TABLE usres;
+```
 ```
 CREATE TABLE IF NOT EXISTS users 
 (
 id INT,
 name STRING,
 salary INT,
-unit STRING
+location STRING
 )
 ROW FORMAT DELIMITED
 FIELDS TERMINATED BY '\t'
@@ -92,7 +95,7 @@ CREATE EXTERNAL TABLE users
 id INT,
 name STRING,
 salary INT,
-unit STRING
+location STRING
 )
 ROW FORMAT DELIMITED
 COMMENT 'USER details'
@@ -120,7 +123,7 @@ CREATE TEMPORARY TABLE users_tmp
 id INT,
 name STRING,
 salary INT,
-unit STRING
+location STRING
 )
 ROW FORMAT DELIMITED
 COMMENT 'temporary details'
@@ -152,7 +155,7 @@ CREATE TABLE users
 id INT,
 name STRING,
 salary INT,
-unit STRING
+location STRING
 )
 ROW FORMAT DELIMITED
 FIELDS TERMINATED BY '\t'
@@ -167,7 +170,7 @@ CREATE TABLE users
 id INT,
 name STRING,
 salary INT,
-unit STRING
+location STRING
 )
 ROW FORMAT DELIMITED
 FIELDS TERMINATED BY '\t'
@@ -182,7 +185,7 @@ CREATE TABLE users
 id INT,
 name STRING,
 salary INT,
-unit STRING
+location STRING
 )
 ROW FORMAT DELIMITED
 FIELDS TERMINATED BY '\t'
@@ -195,7 +198,7 @@ CREATE TABLE users
 id INT,
 name STRING,
 salary INT,
-unit STRING
+location STRING
 )
 ROW FORMAT DELIMITED
 FIELDS TERMINATED BY '\t'
@@ -209,11 +212,112 @@ CREATE TABLE users
 id INT,
 name STRING,
 salary INT,
-unit STRING
+location STRING
 )
 ROW FORMAT DELIMITED
 FIELDS TERMINATED BY '\t'
 stored as ORC;
 ```
 
-## Loading data
+## Loading data from csv file
+
+Loading data from local file system
+```
+LOAD DATA LOCAL INPATH '/root/hive/test.csv' INTO TABLE users;
+```
+
+Loading data from file in HDFS 
+```
+LOAD DATA INPATH '/root/hive/test.csv' INTO TABLE users;
+```
+
+Overwrite the file.
+```
+LOAD DATA LOCAL INPATH '/root/hive/test.csv' OVERWRITE INTO TABLE users;
+```
+If table is partitioned, need to use `PARTITION` to load data into specific partition.
+```
+LOAD DATA LOCAL INPATH '/root/hive/test.csv' OVERWRITE INTO TABLE users PARTITION(location=2);
+```
+### Insert commands to populate data to hive tables
+
+Insert single row.
+```
+INSERT INTO users VALUES 
+(1,'sam',120000,"Hyderabad");
+```
+Insert multiple rows.
+```
+INSERT INTO users VALUES 
+(1,'sam',120000,"Chennai"),
+(2,'ram',150000,"Bangalore");
+```
+Insert selected columns
+```
+INSERT INTO users(id,name) VALUES 
+(3,'tom'),
+(4,'surya');
+```
+Insert from other table
+```
+INSERT INTO users SELECT * FROM temp_users;
+```
+Overwrite the existing table
+```
+INSERT OVERWRITE INTO users SELECT * FROM temp_users;
+```
+
+### Inserting to PARTITION table
+Let's assume users table is partitioned based on location.<br>
+We need to specify the column name inside PARTITION. Value can be mentioned along with parttion or as the last column
+
+```
+INSERT INTO users PARTITION(location='Chennai') VALUES
+(10,'ravi',120000)
+```
+Here it is mandatory to keep the partition column value as the last column as we have not specified inside the PARTITION
+```
+INSERT INTO users PARTITION(location) VALUES
+(11,'anil',120000,'Bangalore');
+```
+### Export hive table to HDFS
+```
+INSERT OVERWRITE 
+DIRECTORY '/user/hive/export' 
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ',' 
+SELECT * FROM employee;
+```
+
+### Export hive table to LOCAL
+```
+INSERT OVERWRITE LOCAL
+DIRECTORY '/tmp/hive/export' 
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ',' 
+SELECT * FROM employee;
+```
+If we have a huge table, this exports the data into multiple part files, we can combine them into a single file using Unix cat command as shown below.
+
+```
+cat /tmp/hive/export/* > output.csv
+```
+
+### Export as excel file
+We can run the queries over hive tables directly using ``hive '-e'``
+```
+hive -e 'select * from table' > output.tsv
+```
+We can list all the queries to be executed in hql file, instead of executing each one manually.
+```
+hive -f queries.hql
+```
+
+## Drop tables
+Drops metadata and data files stored in HDFS for internal tables, where as only metadata is dropped for extrenal tables.
+```
+DROP TABLE users;
+```
+```
+DROP TABLE IF EXISTS users;
+```
