@@ -144,7 +144,7 @@ Table is created with the same schema as reffered table.<br> No rows will be pre
 ```
 CREATE TABLE user_copy LIKE
 ```
-
+## File Formats
 ### Text file table
 ```
 CREATE TABLE users 
