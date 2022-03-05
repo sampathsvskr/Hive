@@ -41,7 +41,7 @@ DROP TABLE IF EXISTS employee PURGE;
 
 ## Create tables
 ```
-SHOW TABLES:
+SHOW TABLES;
 ```
 ```
 SHOW TABLES IN HivePractice;
