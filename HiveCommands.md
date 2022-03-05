@@ -145,7 +145,7 @@ CREATE TABLE users_temp AS SELECT id,name FROM users WHERE salary >100000;
 ### LIKE
 Table is created with the same schema as reffered table.<br> No rows will be present in the created table.
 ```
-CREATE TABLE user_copy LIKE
+CREATE TABLE user_copy LIKE users;
 ```
 ## File Formats
 ### Text file table
