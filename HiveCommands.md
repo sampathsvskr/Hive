@@ -489,7 +489,7 @@ FROM users
 WHERE rank = 1;
 
 Output:
-id      name     salary   rank
+id          name        salary   rank
 3	    Yadav	 300	  1
 4	    Sunil	 500	  1
 ```
@@ -500,7 +500,7 @@ RANK according to salary<br>
 ```
 select rank() OVER (ORDER BY salary), id, name, salary, unit
 FROM users;
-rank id  name   salary unit
+rank     id      name   salary     unit
 1	 1	 Amit	100	   DNA
 1	 5	 Kranti	100	   FCS
 3	 2	 Sumit	200	   DNA
@@ -518,7 +518,7 @@ DENSE_RANK according to salary
 select dense_rank() OVER (ORDER BY salary), id, name, salary, unit
 FROM users;
 
-dense_rank  id  name    salary  unit
+dense_rank      id      name    salary     unit
 1	        1	Amit	100	    DNA
 1	        5	Kranti	100	    FCS
 2	        2	Sumit	200	    DNA
@@ -534,7 +534,7 @@ DENSE_RANK according to salary for every unit
 select dense_rank() OVER (PARTITION BY unit ORDER BY salary DESC) AS rank, id, name, salary, unit
 FROM users;
 
-rank    id  name    salary  unit
+rank        id  name    salary     unit
 1	    3	Yadav	300	    DNA
 2	    2	Sumit	200	    DNA
 3	    1	Amit	100	    DNA
@@ -555,10 +555,10 @@ FROM users
 ) temp
 WHERE rank <= 2;
 
-name    salary  unit   rank
+name    salary      unit   rank
 Yadav	300	    DNA	    1
 Sumit	200	    DNA	    2
-Sunil	500 	FCS	    1
+Sunil	500 	    FCS	    1
 Mahoor	200	    FCS	    2
 ```
 
@@ -569,7 +569,7 @@ Getting current name and salary along with next higher salary in the same unit
 select name, salary, LEAD(salary) OVER (PARTITION BY unit ORDER BY salary)
 FROM users;
 
-name    salary  lead
+name    salary     lead
 Amit	100	    200
 Sumit	200	    300
 Yadav	300	    NULL
@@ -585,7 +585,7 @@ Getting current name and salary alongwith next to next higher salary in the same
 select name, salary, LEAD(salary, 2) OVER (PARTITION BY unit ORDER BY salary)
 FROM users;
 
-name    salary  lead
+name    salary     lead
 Amit	100	    300
 Sumit	200	    NULL
 Yadav	300	    NULL
@@ -601,7 +601,7 @@ Getting current name and salary alongwith next to next higher salary in the same
 select name, salary, LEAD(salary, 2, -1) OVER (PARTITION BY unit ORDER BY salary)
 FROM users;
 
-name    salary  lead
+name    salary     lead
 Amit	100	    300
 Sumit	200	    -1
 Yadav	300	    -1
@@ -617,7 +617,7 @@ Getting current name and salary alongwith the closest lower salary
 select salary, LAG(salary) OVER (PARTITION BY unit ORDER BY salary)
 FROM users;
 
-salary  Lag
+salary 	    Lag
 100	    NULL
 200	    100
 300	    200
