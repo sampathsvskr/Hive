@@ -38,7 +38,7 @@ You can use `PURGE` option to not move the data to .Trash directory, the data wi
 ```
 DROP TABLE IF EXISTS employee PURGE;
 ```
-
+-------------------
 ## Create tables
 ```
 SHOW TABLES;
@@ -85,6 +85,19 @@ ROW FORMAT DELIMITED
 FIELDS TERMINATED BY '\t'
 LINES TERMINATED BY '\n'
 stored as textfile;
+```
+```
+CREATE TABLE users
+(
+id INT,
+name STRING,
+salary INT,
+unit STRING
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '\t'
+stored as textfile
+TBLPROPERTIES ("skip.header.line.count"="1");
 ```
 
 ## External table in hive
@@ -218,7 +231,7 @@ ROW FORMAT DELIMITED
 FIELDS TERMINATED BY '\t'
 stored as ORC;
 ```
-
+----------
 ## Loading data from csv file
 
 Loading data from local file system
@@ -266,7 +279,51 @@ Overwrite the existing table
 ```
 INSERT OVERWRITE INTO users SELECT * FROM temp_users;
 ```
+------
+## Partitioned table
+### Creating partitioned table
+```
+CREATE TABLE emp_details_partitioned
+(
+emp_name string,
+unit string,
+exp int
+)
+partitioned by (location string);
+```
+###Load data to partitioned table
 
+### Static partition Load
+```
+INSERT OVERWRITW TABLE emp_details_partitioned
+PARTITION(location = 'blr')
+SELECT emp_name, unit, exp FROM emp_details
+WHERE location = 'blr';
+
+			or
+			
+INSERT INTOTABLE table emp_details_partitioned
+PARTITION(location = 'blr')
+SELECT emp_name, unit, exp FROM emp_details
+WHERE location = 'blr';
+```
+### Dynamic partition Load
+To enable dynamic partition.
+```
+set hive.exec.dynamic.partition.mode=nonstrict; 
+```
+Partitions should be in the select in the same order at the last position.
+```
+INSERT OVERWRITW TABLE emp_details_partitioned
+PARTITION(location)
+SELECT emp_name, unit, exp, location FROM emp_details;
+
+			or
+			
+INSERT INTOTABLE table emp_details_partitioned
+PARTITION(location)
+SELECT emp_name, unit, exp, location FROM emp_details;
+```
 ### Inserting to PARTITION table
 Let's assume users table is partitioned based on location.<br>
 We need to specify the column name inside PARTITION. Value can be mentioned along with parttion or as the last column
@@ -280,6 +337,37 @@ Here it is mandatory to keep the partition column value as the last column as we
 INSERT INTO users PARTITION(location) VALUES
 (11,'anil',120000,'Bangalore');
 ```
+### To get no. of partitions
+```
+SHOW PARTITIONS emp_details_partitioned;
+```
+----------------
+## Bucketing
+
+```
+CREATE TABLE buck_users
+(
+id INT,
+name STRING,
+salary INT,
+unit STRING
+)
+CLUSTERED BY (id)
+SORTED BY (id)
+INTO 2 BUCKETS;
+```
+To enable bucketing
+```
+SET hive.enforce.bucketing=true;
+```
+Load data to bucket table
+```
+INSERT OVERWRITE TABLE buck_users
+SELECT * FROM users;
+```
+View the number of files created at the table location.<br>
+It should be two as we have created 2 buckets.
+
 ### Export hive table to HDFS
 ```
 INSERT OVERWRITE 
@@ -312,7 +400,7 @@ We can list all the queries to be executed in hql file, instead of executing eac
 ```
 hive -f queries.hql
 ```
-
+-----
 ## Drop tables
 Drops metadata and data files stored in HDFS for internal tables, where as only metadata is dropped for extrenal tables.
 ```
@@ -321,3 +409,220 @@ DROP TABLE users;
 ```
 DROP TABLE IF EXISTS users;
 ```
+-------
+### Window functions
+
+`users.txt`<br>
+1	Amit	100	DNA<br>
+2	Sumit	200	DNA<br>
+3	Yadav	300	DNA<br>
+4	Sunil	500	FCS<br>
+5	Kranti	100	FCS<br>
+6	Mahoor	200	FCS<br>
+
+`locations.txt`<br>
+1	UP<br>
+2	BIHAR<vr>
+3	MP<br>
+4	AP<br>
+5	MAHARASHTRA<br>
+6	GOA<br>
+
+Using default database.
+```
+USE Default;
+```
+Creating Users table.
+```
+create TABLE users
+(
+id INT,
+name STRING,
+salary INT,
+unit STRING
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '\t';
+```
+Creating locations table.
+```
+create TABLE locations
+(
+id INT,
+location STRING
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '\t';
+```
+Loading data to users and location table.
+```
+LOAD DATA LOCAL INPATH 'users.txt'
+INTO TABLE users;
+```
+
+```
+LOAD DATA LOCAL INPATH 'locations.txt'
+INTO TABLE locations;
+```
+Getting maximum salary across all the units
+
+```
+select unit, MAX(salary) FROM users
+GROUP BY unit;
+
+Output:
+unit    max(salary)
+DNA	    300
+FCS	    500
+```
+
+Getting list of employees who have maximum salary across all the units
+
+--Not possible with GROUP BY
+
+```
+select id, name, salary, rank FROM
+(
+select id, name, salary, rank() OVER (PARTITION BY unit ORDER BY salary DESC) AS rank
+FROM users
+) temp
+WHERE rank = 1;
+
+Output:
+id      name     salary   rank
+3	    Yadav	 300	  1
+4	    Sunil	 500	  1
+```
+
+RANK according to salary<br>
+--Skips intermediate numbers in case of a tie.
+
+```
+select rank() OVER (ORDER BY salary), id, name, salary, unit
+FROM users;
+rank id  name   salary unit
+1	 1	 Amit	100	   DNA
+1	 5	 Kranti	100	   FCS
+3	 2	 Sumit	200	   DNA
+3	 6	 Mahoor	200	   FCS
+5	 3	 Yadav	300	   DNA
+6	 4	 Sunil	500	   FCS
+```
+
+DENSE_RANK according to salary
+
+
+--Doesn't skip intermediate numbers in case of a tie.
+
+```
+select dense_rank() OVER (ORDER BY salary), id, name, salary, unit
+FROM users;
+
+dense_rank  id  name    salary  unit
+1	        1	Amit	100	    DNA
+1	        5	Kranti	100	    FCS
+2	        2	Sumit	200	    DNA
+2	        6	Mahoor	200	    FCS
+3	        3	Yadav	300	    DNA
+4	        4	Sunil	500	    FCS
+```
+--
+DENSE_RANK according to salary for every unit
+--
+
+```
+select dense_rank() OVER (PARTITION BY unit ORDER BY salary DESC) AS rank, id, name, salary, unit
+FROM users;
+
+rank    id  name    salary  unit
+1	    3	Yadav	300	    DNA
+2	    2	Sumit	200	    DNA
+3	    1	Amit	100	    DNA
+1	    4	Sunil	500	    FCS
+2	    6	Mahoor	200	    FCS
+3	    5	Kranti	100	    FCS
+```
+--
+Top 2 highest paid employees for every unit
+--
+
+```
+select name, salary, unit, rank 
+FROM
+(
+select dense_rank() OVER (PARTITION BY unit ORDER BY salary DESC) AS rank, id, name, salary, unit
+FROM users
+) temp
+WHERE rank <= 2;
+
+name    salary  unit   rank
+Yadav	300	    DNA	    1
+Sumit	200	    DNA	    2
+Sunil	500 	FCS	    1
+Mahoor	200	    FCS	    2
+```
+
+Getting current name and salary along with next higher salary in the same unit
+
+
+```
+select name, salary, LEAD(salary) OVER (PARTITION BY unit ORDER BY salary)
+FROM users;
+
+name    salary  lead
+Amit	100	    200
+Sumit	200	    300
+Yadav	300	    NULL
+Kranti	100	    200
+Mahoor	200	    500
+Sunil	500	    NULL
+```
+
+Getting current name and salary alongwith next to next higher salary in the same unit
+
+
+```
+select name, salary, LEAD(salary, 2) OVER (PARTITION BY unit ORDER BY salary)
+FROM users;
+
+name    salary  lead
+Amit	100	    300
+Sumit	200	    NULL
+Yadav	300	    NULL
+Kranti	100	    500
+Mahoor	200	    NULL
+Sunil	500	    NULL
+```
+
+Getting current name and salary alongwith next to next higher salary in the same unit replacing NULL with -1
+
+
+```
+select name, salary, LEAD(salary, 2, -1) OVER (PARTITION BY unit ORDER BY salary)
+FROM users;
+
+name    salary  lead
+Amit	100	    300
+Sumit	200	    -1
+Yadav	300	    -1
+Kranti	100	    500
+Mahoor	200	    -1
+Sunil	500	    -1
+```
+
+Getting current name and salary alongwith the closest lower salary
+
+
+```
+select salary, LAG(salary) OVER (PARTITION BY unit ORDER BY salary)
+FROM users;
+
+salary  Lag
+100	    NULL
+200	    100
+300	    200
+100	    NULL
+200	    100
+500	    200
+```
+
