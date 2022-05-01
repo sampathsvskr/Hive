@@ -75,7 +75,7 @@ DESCRIBE users;
 DESCRIBE FORMATTED users;
 ```
 ```
-SHOW CRAETE TABLE usres;
+SHOW CREATE TABLE usres;
 ```
 ```
 CREATE TABLE IF NOT EXISTS users 
