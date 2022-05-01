@@ -10,6 +10,10 @@ CREATE DATABASE HivePractice;
 ```
 CREATE DATABASE IF NOT EXISTS HivePractice;
 ```
+```
+DESCRIBE DATABASE HivePractice;
+```
+
 
 Creating database in specific location
 ```
