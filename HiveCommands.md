@@ -389,8 +389,8 @@ SELECT * FROM employee;
 
 ### Export hive table to LOCAL
 ```
-INSERT OVERWRITE LOCAL
-DIRECTORY '/tmp/hive/export' 
+INSERT OVERWRITE 
+LOCAL DIRECTORY '/tmp/hive/export' 
 ROW FORMAT DELIMITED 
 FIELDS TERMINATED BY ',' 
 SELECT * FROM employee;
