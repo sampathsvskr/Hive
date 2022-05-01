@@ -13,10 +13,7 @@ CREATE DATABASE IF NOT EXISTS HivePractice;
 ```
 DESCRIBE DATABASE HivePractice;
 ```
-Altering table name
-```
-ALTER TABLE HivePractice rename to HivePractice_new
-```
+
 
 Creating database in specific location
 ```
@@ -80,6 +77,12 @@ DESCRIBE FORMATTED users;
 ```
 SHOW CREATE TABLE usres;
 ```
+Altering table name
+```
+ALTER TABLE HivePractice rename to HivePractice_new
+```
+
+
 ```
 CREATE TABLE IF NOT EXISTS users 
 (
