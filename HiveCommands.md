@@ -13,7 +13,10 @@ CREATE DATABASE IF NOT EXISTS HivePractice;
 ```
 DESCRIBE DATABASE HivePractice;
 ```
-
+Altering table name
+```
+ALTER TABLE HivePractice rename to HivePractice_new
+```
 
 Creating database in specific location
 ```
