@@ -636,3 +636,166 @@ salary 	    Lag
 500	    200
 ```
 
+### Practice
+## example 1
+input_data
+	       
+```
+101	first:Amit,last:Mishra	bbsr,751024	Hadoop,Hive
+102	first:Aditya,last:Kulkarni	bnglr,123412	Hadoop,Hive,Oracle
+103	mid:Aditya,last:Kulkarni	bnglr,123412	Hadoop,Oracle
+```
+
+creating table based on input data
+
+```
+create table complex_data
+(
+emp_id int ,
+name map<string , string >,
+location struct <city:string , pin :int > ,
+skill_set array<string>
+)
+row format delimited fields terminated by '\t'
+collection items terminated by ','
+map keys terminated by ':';
+```
+   
+   
+```
+select * from complex_data;
+------------------------------------------------------------------------------------------
+101     {"first":"Amit","last":"Mishra"}        {"city":"bbsr","pincode":751024}        ["Hadoop","Hive"]
+102     {"first":"Aditya","last":"Kulkarni"}    {"city":"bnglr","pincode":123412}       ["Hadoop","Hive","Oracle"]
+103     {"mid":"Aditya","last":"Kulkarni"}      {"city":"bnglr","pincode":123412}       ["Hadoop","Oracle"]
+```
+
+   
+```
+select id, name['first'] from complex_data;
+------------------------------------------------------------------------------------------
+101     Amit
+102     Aditya
+103     NULL
+```
+
+```
+select id, name['first'], location.city from complex_data;
+------------------------------------------------------------------------------------------
+101     Amit    bbsr
+102     Aditya  bnglr
+103     NULL    bnglr
+```
+
+```
+select id, name['first'], location.city, skill_set[0] from complex_data;
+------------------------------------------------------------------------------------------
+101     Amit    bbsr    Hadoop
+102     Aditya  bnglr   Hadoop
+103     NULL    bnglr   Hadoop
+```
+
+```
+select id, name['first'], location.city, skill_set[0], size(skill_set) from complex_data;
+------------------------------------------------------------------------------------------
+101     Amit    bbsr    Hadoop  2
+102     Aditya  bnglr   Hadoop  3
+103     NULL    bnglr   Hadoop  2
+```
+
+```
+select id, name, skill_set, array_contains(skill_set,'Hadoop') from complex_data;
+------------------------------------------------------------------------------------------
+101     {"first":"Amit","last":"Mishra"}        ["Hadoop","Hive"]       		true
+102     {"first":"Aditya","last":"Kulkarni"}    ["Hadoop","Hive","Oracle"]      	true
+103     {"mid":"Aditya","last":"Kulkarni"}      ["Hadoop","Oracle"]     		true
+```
+
+```
+select id, name, sort_array(skill_set) from complex_data;
+------------------------------------------------------------------------------------------
+101     {"first":"Amit","last":"Mishra"}        ["Hadoop","Hive"]
+102     {"first":"Aditya","last":"Kulkarni"}    ["Hadoop","Hive","Oracle"]
+103     {"mid":"Aditya","last":"Kulkarni"}      ["Hadoop","Oracle"]
+```
+
+
+
+
+   
+## Example 2  
+   
+input data   
+```
+101,Amit,HADOOP:HIVE:SPARK:BIG-DATA
+102,Sumit,HIVE:OOZIE:HADOOP:SPARK:STORM
+103,Rohit,KAFKA:CASSANDRA:HBASE
+```
+
+
+```
+create table emp_details
+(
+id int ,
+name string ,
+skill_set array<string>
+)
+row format delimited
+fields terminated by ','
+collection items terminated by ':';
+```
+   
+   
+   
+```
+select * from emp_details;
+------------------------------------------------------------------------------------------
+101     Amit    ["HADOOP","HIVE","SPARK","BIG-DATA"]
+102     Sumit   ["HIVE","OOZIE","HADOOP","SPARK","STORM"]
+103     Rohit   ["KAFKA","CASSANDRA","HBASE"]
+```
+
+
+```
+select sort_array(skill_set) from emp_details;
+------------------------------------------------------------------------------------------
+["BIG-DATA","HADOOP","HIVE","SPARK"]
+["HADOOP","HIVE","OOZIE","SPARK","STORM"]
+["CASSANDRA","HBASE","KAFKA"]
+```
+
+
+```
+select explode(skill_set) from emp_details;
+------------------------------------------------------------------------------------------
+HADOOP
+HIVE
+SPARK
+BIG-DATA
+HIVE
+OOZIE
+HADOOP
+SPARK
+STORM
+KAFKA
+CASSANDRA
+HBASE
+```
+
+```
+select id, name , skill from emp_details lateral view explode(skill_set) skills as skill;
+------------------------------------------------------------------------------------------
+101     Amit    HADOOP
+101     Amit    HIVE
+101     Amit    SPARK
+101     Amit    BIG-DATA
+102     Sumit   HIVE
+102     Sumit   OOZIE
+102     Sumit   HADOOP
+102     Sumit   SPARK
+102     Sumit   STORM
+103     Rohit   KAFKA
+103     Rohit   CASSANDRA
+103     Rohit   HBASE
+```
+
